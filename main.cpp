@@ -61,7 +61,35 @@ LRESULT CALLBACK window_procedure(HWND handle, UINT message, WPARAM wp, LPARAM l
     {
         if(!OpenClipboard(nullptr))
         {
-            throw kernel_failure("OpenClipboard()");
+            if(ERROR_ACCESS_DENIED != GetLastError())
+            {
+                throw kernel_failure("OpenClipboard()");
+            }
+
+            std::cout << "Clipboard is locked by another application." << std::endl;
+
+            bool success = false;
+            for(auto i = 1; i < 6; i++)
+            {
+                std::cout << "Waiting for clipboard. Attempt " << i << "/5." << std::endl;
+                Sleep(5);
+
+                if(OpenClipboard(nullptr))
+                {
+                    success = true;
+                    break;
+                }
+
+                if(ERROR_ACCESS_DENIED != GetLastError())
+                {
+                    throw kernel_failure("OpenClipboard()");
+                }
+            }
+
+            if(!success)
+            {
+                throw kernel_failure("OpenClipboard()");
+            }
         }
 
         try
