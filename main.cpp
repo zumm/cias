@@ -154,6 +154,13 @@ LRESULT CALLBACK window_procedure(HWND handle, UINT message, WPARAM wp, LPARAM l
 
         std::string filename = std::to_string(get_timestamp()) + ".png";
         std::ofstream os(save_path + filename, std::ios::binary);
+
+        if(!os)
+        {
+            std::string error = "Unable to open file [" + save_path + filename + "]";
+            throw std::runtime_error(error);
+        }
+
         os.write((char *) new_image_data.data(), new_image_data.size());
         old_image_data = new_image_data;
 
@@ -161,7 +168,7 @@ LRESULT CALLBACK window_procedure(HWND handle, UINT message, WPARAM wp, LPARAM l
     }
     catch(const std::exception & exception)
     {
-        std::cerr << "Unable to process clipboard:" << std::endl;
+        std::cerr << "Unable to process clipboard or save image:" << std::endl;
         std::cerr << exception.what() << std::endl;
     }
 
