@@ -153,7 +153,7 @@ LRESULT CALLBACK window_procedure(HWND handle, UINT message, WPARAM wp, LPARAM l
         }
 
         std::string filename = std::to_string(get_timestamp()) + ".png";
-        std::ofstream os(save_path + filename, std::ios::binary);
+        std::ofstream os(save_path + "/" + filename, std::ios::binary);
 
         if(!os)
         {
@@ -175,11 +175,31 @@ LRESULT CALLBACK window_procedure(HWND handle, UINT message, WPARAM wp, LPARAM l
     return DefWindowProc(handle, message, wp, lp);
 }
 
+int has_argument(int arguments_size, char ** arguments, const char * argument_name)
+{
+    for(auto i = 1; i < arguments_size; i++)
+    {
+        if(0 == strcmp(arguments[i], argument_name))
+        {
+            return i;
+        }
+    }
+
+    return 0;
+}
+
+auto get_argument(int arguments_size, char ** arguments, const char * argument_name, const char * default_value = nullptr)
+{
+    auto index = has_argument(arguments_size, arguments, argument_name);
+
+    return 0 == index || index == arguments_size - 1 ? default_value : arguments[index + 1] ;
+}
+
 int main(int arguments_size, char ** arguments)
 {
     ULONG_PTR gdiplusToken;
 
-    save_path = 2 <= arguments_size ? arguments[1] : "";
+    save_path = get_argument(arguments_size, arguments, "--sp", "");
 
     try
     {
@@ -211,6 +231,11 @@ int main(int arguments_size, char ** arguments)
         if(FALSE == AddClipboardFormatListener(handle))
         {
             throw kernel_failure("AddClipboardFormatListener()");
+        }
+
+        if(0 != has_argument(arguments_size, arguments, "--i"))
+        {
+            ShowWindow(GetConsoleWindow(), SW_HIDE);
         }
     }
     catch(const std::exception & exception)
